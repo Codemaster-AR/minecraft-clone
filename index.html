@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Minecraft Clone - Survival</title>
+    <title>Minecraft Survival - Mining Fix</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Courier New', Courier, monospace; user-select: none; }
+        body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
         #crosshair {
             position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M9 0h2v20H9zM0 9h20v2H0z" fill="rgba(255,255,255,0.8)"/></svg>') no-repeat center;
@@ -17,33 +17,34 @@
             pointer-events: auto; width: fit-content; margin: 0 auto 10px auto; border-radius: 5px;
         }
         .slot {
-            width: 40px; height: 40px; background: rgba(100,100,100,0.8); border: 2px solid #333;
+            width: 50px; height: 50px; background: rgba(139, 139, 139, 0.8); border: 3px solid #373737;
             display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative;
         }
-        .slot.active { border-color: white; box-shadow: 0 0 5px white; }
-        .slot img { width: 32px; height: 32px; image-rendering: pixelated; }
-        .count { position: absolute; bottom: 2px; right: 2px; color: white; font-weight: bold; font-size: 12px; text-shadow: 1px 1px 0 #000; }
+        .slot.active { border-color: white; box-shadow: 0 0 10px white; }
+        .slot img { width: 36px; height: 36px; image-rendering: pixelated; }
+        .count { position: absolute; bottom: 2px; right: 2px; color: white; font-weight: bold; font-size: 14px; text-shadow: 2px 2px 0 #000; }
         
         #inventory-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 20; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.8); z-index: 20; justify-content: center; align-items: center;
             flex-direction: column; color: white;
         }
         #inventory-window {
-            background: #c6c6c6; padding: 20px; border: 4px solid #555; color: #333;
-            display: flex; gap: 20px; image-rendering: pixelated;
+            background: #c6c6c6; padding: 25px; border: 4px solid #555; color: #333;
+            display: flex; gap: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.5);
         }
-        .grid-container { display: grid; gap: 4px; background: #8b8b8b; padding: 4px; border: 2px solid #fff; border-right-color: #373737; border-bottom-color: #373737; }
-        .crafting-section { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .crafting-arrow { font-size: 24px; font-weight: bold; color: #333; }
+        .grid-container { display: grid; gap: 4px; background: #8b8b8b; padding: 6px; border: 2px solid #fff; border-right-color: #373737; border-bottom-color: #373737; }
+        .crafting-section { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
+        .crafting-arrow { font-size: 32px; font-weight: bold; color: #333; }
         
-        #debug { position: absolute; top: 10px; left: 10px; color: white; font-weight: bold; text-shadow: 1px 1px 0 #000; pointer-events: none; }
-        #stats { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); color: white; display: flex; gap: 10px; pointer-events: none; }
-        .heart { color: #ff4d4d; font-size: 20px; }
+        #debug { position: absolute; top: 15px; left: 15px; color: white; font-weight: bold; text-shadow: 1px 1px 0 #000; pointer-events: none; line-height: 1.4; }
+        #stats { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); color: white; pointer-events: none; }
+        .heart-container { display: flex; gap: 4px; margin-bottom: 5px; }
+        .heart { color: #ff4d4d; font-size: 24px; text-shadow: 2px 2px 0 #000; }
 
         #mining-progress-container {
             position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);
-            width: 100px; height: 10px; background: rgba(0,0,0,0.5); border: 1px solid #fff;
+            width: 120px; height: 12px; background: rgba(0,0,0,0.5); border: 2px solid #fff;
             display: none;
         }
         #mining-progress-bar { width: 0%; height: 100%; background: #fff; }
@@ -51,29 +52,38 @@
 </head>
 <body>
 
-<div id="debug">Survival Mode<br>L-Click: Mine/Attack | R-Click: Place<br>'E' Inventory | Space: Jump</div>
+<div id="debug">
+    <b>Minecraft Survival</b><br>
+    L-Click: Mine/Attack<br>
+    R-Click: Place/Interact<br>
+    'E': Inventory/Crafting<br>
+    '1-9': Select Slot
+</div>
+
 <div id="crosshair"></div>
 <div id="mining-progress-container"><div id="mining-progress-bar"></div></div>
 
 <div id="stats">
-    <div id="health-row"></div>
+    <div class="heart-container" id="health-row"></div>
 </div>
 
 <div id="inventory-screen">
-    <h2>Inventory & Crafting</h2>
+    <h2 style="margin-bottom: 20px; text-shadow: 2px 2px 0 #000;">Survival Inventory</h2>
     <div id="inventory-window">
         <div>
-            <h3>Backpack</h3>
+            <h3 style="margin-top:0">Inventory</h3>
             <div id="main-inventory" class="grid-container" style="grid-template-columns: repeat(9, 1fr);"></div>
+            <h3 style="margin-bottom:5px">Hotbar</h3>
+            <div id="hotbar-inventory" class="grid-container" style="grid-template-columns: repeat(9, 1fr);"></div>
         </div>
         <div class="crafting-section">
-            <h3 id="crafting-title">Crafting</h3>
+            <h3 id="crafting-title" style="margin-top:0">Crafting (3x3)</h3>
             <div id="crafting-grid" class="grid-container"></div>
             <div class="crafting-arrow">➜</div>
-            <div id="crafting-result" class="slot" style="background: #8b8b8b;"></div>
+            <div id="crafting-result" class="slot" style="background: #8b8b8b; width:64px; height:64px;"></div>
         </div>
     </div>
-    <div style="margin-top: 20px; color: #ccc;">Press 'E' to Close</div>
+    <div style="margin-top: 25px; color: #ccc; font-weight: bold;">[Press 'E' to Resume]</div>
 </div>
 
 <div id="ui-container">
@@ -84,7 +94,7 @@
 
 <script>
 /**
- * 1. TEXTURES & ITEMS
+ * 1. ASSET GENERATION
  */
 const TextureGen = {
     cache: {},
@@ -95,7 +105,7 @@ const TextureGen = {
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, 64, 64);
-        for(let i=0; i<400; i++) {
+        for(let i=0; i<500; i++) {
             ctx.fillStyle = `rgba(0,0,0,${Math.random() * noiseAlpha})`;
             ctx.fillRect(Math.random()*64, Math.random()*64, 2, 2);
             ctx.fillStyle = `rgba(255,255,255,${Math.random() * noiseAlpha})`;
@@ -104,9 +114,7 @@ const TextureGen = {
         details.forEach(d => {
             ctx.fillStyle = d.color;
             if(d.type === 'rect') ctx.fillRect(d.x, d.y, d.w, d.h);
-            if(d.type === 'spots') {
-                for(let i=0; i<d.count; i++) ctx.fillRect(Math.random()*60, Math.random()*60, d.s, d.s);
-            }
+            if(d.type === 'spots') for(let i=0; i<d.count; i++) ctx.fillRect(Math.random()*60, Math.random()*60, d.s, d.s);
         });
         const url = canvas.toDataURL();
         this.cache[name] = url;
@@ -122,79 +130,81 @@ const TEX = {
     wood: TextureGen.create('wood', '#5d4037', 0.1, [{type:'rect', x:10, y:0, w:10, h:64, color:'#4e342e'}, {type:'rect', x:40, y:0, w:10, h:64, color:'#4e342e'}]),
     leaves: TextureGen.create('leaves', '#388e3c', 0.2, [{type:'spots', count:100, s:4, color:'#2e7d32'}]),
     plank: TextureGen.create('plank', '#a1887f', 0.05, [{type:'rect', x:0, y:0, w:64, h:2, color:'#5d4037'}, {type:'rect', x:0, y:32, w:64, h:2, color:'#5d4037'}]),
-    cobblestone: TextureGen.create('cobblestone', '#616161', 0.2, [{type:'rect', x:10, y:10, w:20, h:20, color:'#757575'}, {type:'rect', x:35, y:35, w:15, h:15, color:'#757575'}]),
-    crafting_table_side: TextureGen.create('crafting_side', '#5d4037', 0.05, [{type:'rect', x:5, y:5, w:54, h:54, color:'#8d6e63'}]),
-    crafting_table_top: TextureGen.create('crafting_top', '#a1887f', 0.05, [{type:'rect', x:10, y:10, w:44, h:44, color:'#5d4037'}]),
-    pig: TextureGen.create('pig', '#f48fb1', 0.05),
-    zombie: TextureGen.create('zombie', '#2e7d32', 0.1),
-    bedrock: TextureGen.create('bedrock', '#212121', 0.3)
+    cobble: TextureGen.create('cobble', '#616161', 0.2, [{type:'rect', x:5, y:5, w:20, h:20, color:'#757575'}]),
+    craft_side: TextureGen.create('craft_side', '#5d4037', 0.1, [{type:'rect', x:10, y:10, w:44, h:44, color:'#8d6e63'}]),
+    craft_top: TextureGen.create('craft_top', '#a1887f', 0.1, [{type:'rect', x:10, y:10, w:44, h:2, color:'#333'}, {type:'rect', x:10, y:30, w:44, h:2, color:'#333'}]),
+    bed_top: TextureGen.create('bed_top', '#d32f2f', 0.1, [{type:'rect', x:0, y:0, w:64, h:20, color:'#eee'}]),
+    wool: TextureGen.create('wool', '#eeeeee', 0.05),
+    bedrock: TextureGen.create('bedrock', '#212121', 0.4)
 };
 
-const BLOCK = { AIR: 0, GRASS: 1, DIRT: 2, STONE: 3, WOOD: 4, LEAVES: 5, PLANKS: 6, COBBLE: 7, CRAFTING_TABLE: 8, BEDROCK: 99 };
+const BLOCK = { AIR: 0, GRASS: 1, DIRT: 2, STONE: 3, WOOD: 4, LEAVES: 5, PLANKS: 6, COBBLE: 7, CRAFTING: 8, BED: 9, WOOL: 10, BEDROCK: 99 };
 
 const ITEMS = {
-    [BLOCK.GRASS]: { name: "Grass Block", texture: TEX.grass_side, type: 'block', hardness: 0.6 },
+    [BLOCK.GRASS]: { name: "Grass", texture: TEX.grass_side, type: 'block', hardness: 0.6 },
     [BLOCK.DIRT]: { name: "Dirt", texture: TEX.dirt, type: 'block', hardness: 0.5 },
-    [BLOCK.STONE]: { name: "Stone", texture: TEX.stone, type: 'block', hardness: 1.5, tool: 'pickaxe', drop: BLOCK.COBBLE },
+    [BLOCK.STONE]: { name: "Stone", texture: TEX.stone, type: 'block', hardness: 1.5, tool: 'pick', drop: BLOCK.COBBLE },
     [BLOCK.WOOD]: { name: "Log", texture: TEX.wood, type: 'block', hardness: 2.0 },
     [BLOCK.LEAVES]: { name: "Leaves", texture: TEX.leaves, type: 'block', hardness: 0.2 },
     [BLOCK.PLANKS]: { name: "Planks", texture: TEX.plank, type: 'block', hardness: 2.0 },
-    [BLOCK.COBBLE]: { name: "Cobblestone", texture: TEX.cobblestone, type: 'block', hardness: 2.0, tool: 'pickaxe' },
-    [BLOCK.CRAFTING_TABLE]: { name: "Crafting Table", texture: TEX.crafting_table_side, type: 'block', hardness: 2.5 },
+    [BLOCK.COBBLE]: { name: "Cobble", texture: TEX.cobble, type: 'block', hardness: 2.0, tool: 'pick' },
+    [BLOCK.CRAFTING]: { name: "Workbench", texture: TEX.craft_side, type: 'block', hardness: 2.5 },
+    [BLOCK.BED]: { name: "Bed", texture: TEX.bed_top, type: 'block', hardness: 0.5 },
+    [BLOCK.WOOL]: { name: "Wool", texture: TEX.wool, type: 'block', hardness: 0.8 },
     [BLOCK.BEDROCK]: { name: "Bedrock", texture: TEX.bedrock, type: 'block', hardness: Infinity },
-    100: { name: "Stick", texture: TextureGen.create('stick', '#8d6e63', 0, [{type:'rect', x:28, y:10, w:8, h:44, color:'#5d4037'}]), type: 'item' },
-    101: { name: "Wooden Pickaxe", texture: TextureGen.create('wood_pick', 'rgba(0,0,0,0)', 0, [{type:'rect', x:30, y:30, w:6, h:30, color:'#8d6e63'}, {type:'rect', x:10, y:20, w:44, h:10, color:'#a1887f'}]), type: 'tool', toolType: 'pickaxe', efficiency: 2.5 }
+    100: { name: "Stick", texture: TextureGen.create('stick', '#8d6e63', 0, [{type:'rect',x:28,y:10,w:8,h:44,color:'#5d4037'}]), type: 'item' },
+    101: { name: "Wood Pick", texture: TextureGen.create('wp','rgba(0,0,0,0)',0,[{type:'rect',x:30,y:30,w:4,h:30,color:'#8d6e63'},{type:'rect',x:10,y:20,w:44,h:8,color:'#a1887f'}]), type: 'tool', toolType: 'pick', efficiency: 3 },
+    102: { name: "Wood Sword", texture: TextureGen.create('ws','rgba(0,0,0,0)',0,[{type:'rect',x:30,y:45,w:4,h:15,color:'#8d6e63'},{type:'rect',x:25,y:10,w:14,h:35,color:'#a1887f'}]), type: 'tool', damage: 4 },
+    103: { name: "Stone Pick", texture: TextureGen.create('sp','rgba(0,0,0,0)',0,[{type:'rect',x:30,y:30,w:4,h:30,color:'#8d6e63'},{type:'rect',x:10,y:20,w:44,h:8,color:'#757575'}]), type: 'tool', toolType: 'pick', efficiency: 5 },
+    104: { name: "Stone Sword", texture: TextureGen.create('ss','rgba(0,0,0,0)',0,[{type:'rect',x:30,y:45,w:4,h:15,color:'#8d6e63'},{type:'rect',x:25,y:10,w:14,h:35,color:'#757575'}]), type: 'tool', damage: 6 }
 };
 
-const RECIPES = [
-    { in: [BLOCK.WOOD], out: { id: BLOCK.PLANKS, count: 4 } },
-    { in: [BLOCK.PLANKS, null, BLOCK.PLANKS, null], out: { id: 100, count: 4 } },
-    { in: [BLOCK.PLANKS, BLOCK.PLANKS, BLOCK.PLANKS, BLOCK.PLANKS], out: { id: BLOCK.CRAFTING_TABLE, count: 1 } },
-    { in: [BLOCK.PLANKS, BLOCK.PLANKS, BLOCK.PLANKS, null, 100, null, null, 100, null], out: { id: 101, count: 1 }, grid: 3 }
-];
-
 /**
- * 2. ENGINE SETUP
+ * 2. WORLD & RENDERING
  */
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87CEEB);
-scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
+scene.fog = new THREE.Fog(0x87CEEB, 25, 70);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 camera.rotation.order = 'YXZ';
 const renderer = new THREE.WebGLRenderer({ antialias: false });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-scene.add(ambientLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
-dirLight.position.set(50, 100, 50);
-scene.add(dirLight);
-
 const loader = new THREE.TextureLoader();
-const matCache = {};
+const world = {};
+let interactables = [];
+
 function getMat(id) {
-    if(matCache[id]) return matCache[id];
     const l = (url) => { const t = loader.load(url); t.magFilter = THREE.NearestFilter; return t; };
-    let texs = (id === BLOCK.GRASS) ? [l(TEX.grass_side), l(TEX.grass_side), l(TEX.grass_top), l(TEX.dirt), l(TEX.grass_side), l(TEX.grass_side)] :
-               (id === BLOCK.WOOD) ? [l(TEX.wood), l(TEX.wood), l(TEX.wood), l(TEX.wood), l(TEX.wood), l(TEX.wood)] :
-               (id === BLOCK.CRAFTING_TABLE) ? [l(TEX.crafting_table_side), l(TEX.crafting_table_side), l(TEX.crafting_table_top), l(TEX.plank), l(TEX.crafting_table_side), l(TEX.crafting_table_side)] :
-               [l(ITEMS[id].texture), l(ITEMS[id].texture), l(ITEMS[id].texture), l(ITEMS[id].texture), l(ITEMS[id].texture), l(ITEMS[id].texture)];
-    const mat = texs.map(t => new THREE.MeshLambertMaterial({ map: t }));
-    matCache[id] = mat; return mat;
+    if(id === BLOCK.GRASS) return [l(TEX.grass_side), l(TEX.grass_side), l(TEX.grass_top), l(TEX.dirt), l(TEX.grass_side), l(TEX.grass_side)].map(m => new THREE.MeshLambertMaterial({map:m}));
+    if(id === BLOCK.CRAFTING) return [l(TEX.craft_side), l(TEX.craft_side), l(TEX.craft_top), l(TEX.plank), l(TEX.craft_side), l(TEX.craft_side)].map(m => new THREE.MeshLambertMaterial({map:m}));
+    const t = l(ITEMS[id].texture);
+    return new Array(6).fill(0).map(() => new THREE.MeshLambertMaterial({map:t}));
 }
 
-const world = {};
-const interactables = [];
 function setBlock(x, y, z, id) {
     const key = `${Math.round(x)},${Math.round(y)},${Math.round(z)}`;
-    if (world[key]) {
-        const oldMesh = scene.getObjectByName(key);
-        if (oldMesh) { scene.remove(oldMesh); interactables.splice(interactables.indexOf(oldMesh), 1); }
-        delete world[key];
+    const old = scene.getObjectByName(key);
+    
+    if (old) { 
+        scene.remove(old); 
+        interactables = interactables.filter(item => item !== old);
+        old.geometry.dispose();
+        if(Array.isArray(old.material)) old.material.forEach(m => m.dispose());
+        else old.material.dispose();
     }
-    if (id === BLOCK.AIR) return;
+    
+    delete world[key];
+    if (id === BLOCK.AIR) {
+        // Force-stop mining if this was the block we were mining
+        if (mining.block && mining.block.name === key) {
+            stopMining();
+        }
+        return;
+    }
+
     world[key] = id;
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), getMat(id));
     mesh.position.set(Math.round(x), Math.round(y), Math.round(z));
@@ -203,25 +213,30 @@ function setBlock(x, y, z, id) {
     interactables.push(mesh);
 }
 
+function getBlockAt(x, y, z) {
+    return world[`${Math.round(x)},${Math.round(y)},${Math.round(z)}`] || BLOCK.AIR;
+}
+
 const droppedItems = [];
-function spawnItemDrop(x, y, z, id) {
-    const geo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-    const mat = getMat(id)[0];
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x, y, z);
+function spawnDrop(x, y, z, id) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), getMat(id)[0]);
+    mesh.position.set(x, y + 0.5, z);
     scene.add(mesh);
-    droppedItems.push({ mesh, id, vel: new THREE.Vector3((Math.random()-0.5)*2, 4, (Math.random()-0.5)*2) });
+    droppedItems.push({ 
+        mesh, id, 
+        vel: new THREE.Vector3((Math.random()-0.5)*0.1, 0.15, (Math.random()-0.5)*0.1) 
+    });
 }
 
 function generateWorld() {
-    for(let x = -15; x < 15; x++) {
-        for(let z = -15; z < 15; z++) {
-            let h = Math.floor(Math.sin(x/5) * 2 + Math.cos(z/5) * 2);
+    for(let x=-12; x<12; x++) {
+        for(let z=-12; z<12; z++) {
+            let h = Math.floor(Math.sin(x/4)*1.5 + Math.cos(z/4)*1.5);
             setBlock(x, -5, z, BLOCK.BEDROCK);
-            for(let y = -4; y < h; y++) setBlock(x, y, z, (y < h-2) ? BLOCK.STONE : BLOCK.DIRT);
+            for(let y=-4; y<h; y++) setBlock(x, y, z, y < h-2 ? BLOCK.STONE : BLOCK.DIRT);
             setBlock(x, h, z, BLOCK.GRASS);
-            if(Math.random() < 0.03) {
-                for(let ty = 1; ty <= 4; ty++) setBlock(x, h+ty, z, BLOCK.WOOD);
+            if(Math.random() < 0.04) {
+                for(let ty=1; ty<=4; ty++) setBlock(x, h+ty, z, BLOCK.WOOD);
                 for(let lx=-1; lx<=1; lx++) for(let lz=-1; lz<=1; lz++) setBlock(x+lx, h+5, z+lz, BLOCK.LEAVES);
             }
         }
@@ -230,391 +245,272 @@ function generateWorld() {
 generateWorld();
 
 /**
- * 3. PLAYER & COMBAT
+ * 3. PLAYER SYSTEM
  */
 const player = {
     pos: new THREE.Vector3(0, 10, 0),
     vel: new THREE.Vector3(),
     onGround: false,
     health: 10,
-    maxHealth: 10,
-    invincible: 0,
-    lastYVel: 0
+    invincible: 0
 };
-camera.position.copy(player.pos);
-
-function updateHealthUI() {
-    const row = document.getElementById('health-row');
-    row.innerHTML = '';
-    for(let i=0; i<player.maxHealth; i++) {
-        const s = document.createElement('span');
-        s.className = 'heart';
-        s.innerHTML = i < player.health ? '❤' : '♡';
-        row.appendChild(s);
-    }
-}
-updateHealthUI();
 
 function takeDamage(amt) {
-    if(player.invincible > 0 || amt <= 0) return;
+    if(player.invincible > 0) return;
     player.health -= amt;
     player.invincible = 0.5;
-    playSound('hit');
-    updateHealthUI();
-    if(player.health <= 0) {
-        player.health = 10;
-        player.pos.set(0, 15, 0);
-        player.vel.set(0,0,0);
-        updateHealthUI();
-    }
+    updateUI();
+    if(player.health <= 0) respawn();
+}
+
+function respawn() {
+    player.health = 10;
+    player.pos.set(0, 15, 0);
+    player.vel.set(0,0,0);
+    updateUI();
 }
 
 /**
- * 4. MOBS
+ * 4. INVENTORY & CRAFTING
  */
-const mobs = [];
-const mobGeo = new THREE.BoxGeometry(0.8, 1.8, 0.8);
-const zombieMat = new THREE.MeshLambertMaterial({ map: loader.load(TEX.zombie) });
-zombieMat.map.magFilter = THREE.NearestFilter;
+const inventory = new Array(36).fill(null).map(() => ({ id: null, count: 0 }));
+const craftGrid = new Array(9).fill(null);
+let selectedSlot = 0;
 
-class Zombie {
-    constructor(x, z) {
-        this.mesh = new THREE.Mesh(mobGeo, zombieMat);
-        this.mesh.position.set(x, 10, z);
-        scene.add(this.mesh);
-        this.health = 4;
-        this.vel = new THREE.Vector3();
-    }
-    update(dt) {
-        const toPlayer = new THREE.Vector3().subVectors(player.pos, this.mesh.position);
-        const dist = toPlayer.length();
-        if(dist < 12) {
-            toPlayer.y = 0; toPlayer.normalize();
-            this.vel.x = toPlayer.x * 2.5;
-            this.vel.z = toPlayer.z * 2.5;
-            if(dist < 1.3) takeDamage(1);
-        } else {
-            this.vel.x *= 0.9; this.vel.z *= 0.9;
-        }
-        this.vel.y -= 20 * dt;
-        this.mesh.position.addScaledVector(this.vel, dt);
-        
-        // Simple floor collision for mobs
-        if(this.mesh.position.y < -4) { this.mesh.position.y = -4; this.vel.y = 0; }
-    }
+function addToInv(id, count) {
+    let s = inventory.find(x => x.id === id) || inventory.find(x => !x.id);
+    if(s) { s.id = id; s.count += count; }
 }
-mobs.push(new Zombie(10, 10));
+
+const RECIPES = [
+    { grid: [BLOCK.WOOD], out: BLOCK.PLANKS, count: 4 },
+    { grid: [BLOCK.PLANKS, null, BLOCK.PLANKS], out: 100, count: 4 }, // Sticks
+    { grid: [BLOCK.PLANKS, BLOCK.PLANKS, BLOCK.PLANKS, BLOCK.PLANKS], out: BLOCK.CRAFTING, count: 1 },
+    { grid: [BLOCK.PLANKS, BLOCK.PLANKS, BLOCK.PLANKS, null, 100, null, null, 100], out: 101, count: 1 } // Pick
+];
 
 /**
- * 5. INPUT & MINING
+ * 5. CORE LOGIC
  */
 const keys = {};
-let inventoryOpen = false;
-let isCraftingTable = false;
-let miningBlock = null;
-let miningProgress = 0;
+let invOpen = false;
+let mining = { block: null, progress: 0 };
+const raycaster = new THREE.Raycaster();
+const clock = new THREE.Clock();
 
-document.addEventListener('keydown', (e) => {
+function stopMining() {
+    mining.block = null;
+    mining.progress = 0;
+    document.getElementById('mining-progress-container').style.display = 'none';
+    document.getElementById('mining-progress-bar').style.width = '0%';
+}
+
+document.addEventListener('keydown', e => {
     keys[e.code] = true;
-    if(e.code === 'KeyE') toggleInventory();
-    if(e.key >= '1' && e.key <= '9') selectedSlot = parseInt(e.key)-1, renderHotbar();
+    if(e.code === 'KeyE') toggleInv();
+    if(e.key >= '1' && e.key <= '9') { selectedSlot = parseInt(e.key)-1; updateUI(); }
 });
-document.addEventListener('keyup', (e) => keys[e.code] = false);
+document.addEventListener('keyup', e => keys[e.code] = false);
 
-document.body.addEventListener('mousedown', (e) => {
-    if(!inventoryOpen) document.body.requestPointerLock();
-    if(inventoryOpen) return;
-
-    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-    
-    // Attack mobs?
-    const mobIntersects = raycaster.intersectObjects(mobs.map(m => m.mesh));
-    if(e.button === 0 && mobIntersects.length > 0 && mobIntersects[0].distance < 4) {
-        const hitMob = mobs.find(m => m.mesh === mobIntersects[0].object);
-        hitMob.health--;
-        const push = new THREE.Vector3().subVectors(hitMob.mesh.position, player.pos).normalize().multiplyScalar(5);
-        hitMob.vel.x = push.x; hitMob.vel.z = push.z; hitMob.vel.y = 3;
-        playSound('hit');
-        if(hitMob.health <= 0) {
-            scene.remove(hitMob.mesh);
-            mobs.splice(mobs.indexOf(hitMob), 1);
-        }
-        return;
+function toggleInv() {
+    invOpen = !invOpen;
+    document.getElementById('inventory-screen').style.display = invOpen ? 'flex' : 'none';
+    if(invOpen) {
+        document.exitPointerLock();
+        renderInvUI();
+    } else {
+        document.body.requestPointerLock();
+        craftGrid.forEach((id, i) => { if(id) { addToInv(id, 1); craftGrid[i] = null; } });
     }
+}
 
-    const intersects = raycaster.intersectObjects(interactables);
-    if (intersects.length > 0 && intersects[0].distance < 5) {
-        const hit = intersects[0];
-        if (e.button === 0) { // Start Mining
-            miningBlock = hit.object;
-            miningProgress = 0;
+document.body.addEventListener('mousedown', e => {
+    if(!invOpen) document.body.requestPointerLock();
+    if(invOpen || document.pointerLockElement !== document.body) return;
+
+    raycaster.setFromCamera(new THREE.Vector2(), camera);
+    const hits = raycaster.intersectObjects(interactables);
+    const validHit = hits.find(h => h.distance < 5);
+
+    if(validHit) {
+        if(e.button === 0) { // Mine
+            mining.block = validHit.object;
+            mining.progress = 0;
             document.getElementById('mining-progress-container').style.display = 'block';
-        } else if (e.button === 2) { // Place / Interact
-            const bx = hit.object.position.x, by = hit.object.position.y, bz = hit.object.position.z;
-            if(world[`${bx},${by},${bz}`] === BLOCK.CRAFTING_TABLE && !keys['ShiftLeft']) {
-                openCraftingTable();
-            } else {
-                const nx = hit.face.normal.x, ny = hit.face.normal.y, nz = hit.face.normal.z;
-                const px = Math.round(bx + nx), py = Math.round(by + ny), pz = Math.round(bz + nz);
-                const held = inventory[selectedSlot];
-                if(held && held.id && ITEMS[held.id].type === 'block') {
-                    setBlock(px, py, pz, held.id);
+        } else if(e.button === 2) { // Place
+            const b = validHit;
+            const p = b.object.position.clone().add(b.face.normal);
+            const held = inventory[selectedSlot];
+            if(held.id && ITEMS[held.id].type === 'block') {
+                if(p.distanceTo(player.pos) > 0.8) {
+                    setBlock(p.x, p.y, p.z, held.id);
                     held.count--; if(held.count <= 0) held.id = null;
-                    renderHotbar();
-                    playSound('place');
+                    updateUI();
                 }
             }
         }
     }
 });
 
-document.body.addEventListener('mouseup', () => {
-    miningBlock = null;
-    document.getElementById('mining-progress-container').style.display = 'none';
-});
+document.body.addEventListener('mouseup', stopMining);
 
-/**
- * 6. INVENTORY & CRAFTING
- */
-const inventory = new Array(36).fill(null).map(() => ({ id: null, count: 0 }));
-let selectedSlot = 0;
-const craftingGrid = new Array(9).fill(null);
-
-function renderHotbar() {
-    const el = document.getElementById('hotbar'); el.innerHTML = '';
+function updateUI() {
+    const hb = document.getElementById('hotbar'); hb.innerHTML = '';
     for(let i=0; i<9; i++) {
-        const slot = document.createElement('div');
-        slot.className = 'slot' + (i === selectedSlot ? ' active' : '');
+        const s = document.createElement('div');
+        s.className = 'slot' + (i === selectedSlot ? ' active' : '');
         const item = inventory[i];
-        if(item && item.id) slot.innerHTML = `<img src="${ITEMS[item.id].texture}"><span class="count">${item.count}</span>`;
-        el.appendChild(slot);
+        if(item.id) s.innerHTML = `<img src="${ITEMS[item.id].texture}"><span class="count">${item.count}</span>`;
+        hb.appendChild(s);
     }
+    const hr = document.getElementById('health-row'); hr.innerHTML = '';
+    for(let i=0; i<10; i++) hr.innerHTML += `<span class="heart">${i < player.health ? '❤' : '♡'}</span>`;
 }
 
-function toggleInventory() {
-    inventoryOpen = !inventoryOpen;
-    document.getElementById('inventory-screen').style.display = inventoryOpen ? 'flex' : 'none';
-    if(inventoryOpen) { document.exitPointerLock(); isCraftingTable = false; renderInventoryUI(); }
-    else { document.body.requestPointerLock(); clearCraftingGrid(); }
+function renderInvUI() {
+    const main = document.getElementById('main-inventory'); main.innerHTML = '';
+    const hot = document.getElementById('hotbar-inventory'); hot.innerHTML = '';
+    const grid = document.getElementById('crafting-grid'); grid.innerHTML = '';
+    for(let i=9; i<36; i++) main.appendChild(createSlot(inventory[i], i, 'inv'));
+    for(let i=0; i<9; i++) hot.appendChild(createSlot(inventory[i], i, 'inv'));
+    grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    for(let i=0; i<9; i++) grid.appendChild(createSlot({id: craftGrid[i], count: craftGrid[i]?1:0}, i, 'craft'));
+    checkRecipes();
 }
 
-function openCraftingTable() {
-    inventoryOpen = true; isCraftingTable = true;
-    document.getElementById('inventory-screen').style.display = 'flex';
-    document.exitPointerLock(); renderInventoryUI();
-}
-
-function renderInventoryUI() {
-    const mainInv = document.getElementById('main-inventory'); mainInv.innerHTML = '';
-    inventory.forEach((item, idx) => {
-        const d = createSlotDiv(item, idx, 'inv'); mainInv.appendChild(d);
-    });
-    const craftDiv = document.getElementById('crafting-grid');
-    const size = isCraftingTable ? 3 : 2;
-    craftDiv.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-    craftDiv.innerHTML = '';
-    for(let i=0; i < size*size; i++) craftDiv.appendChild(createSlotDiv({ id: craftingGrid[i], count: craftingGrid[i] ? 1 : 0 }, i, 'craft'));
-    checkRecipe();
-}
-
-function createSlotDiv(item, idx, type) {
+function createSlot(item, idx, type) {
     const s = document.createElement('div'); s.className = 'slot';
-    if(item && item.id) s.innerHTML = `<img src="${ITEMS[item.id].texture}"><span class="count">${item.count}</span>`;
+    if(item.id) s.innerHTML = `<img src="${ITEMS[item.id].texture}"><span class="count">${item.count > 1 ? item.count : ''}</span>`;
     s.onclick = () => {
         if(type === 'inv' && item.id) {
-            const limit = isCraftingTable ? 9 : 4;
-            for(let c=0; c<limit; c++) if(!craftingGrid[c]) { craftingGrid[c] = item.id; item.count--; if(item.count===0) item.id=null; break; }
-        } else if (type === 'craft' && craftingGrid[idx]) {
-            addToInventory(craftingGrid[idx], 1); craftingGrid[idx] = null;
+            for(let i=0; i<9; i++) if(!craftGrid[i]) { craftGrid[i] = item.id; item.count--; if(item.count === 0) item.id = null; break; }
+        } else if(type === 'craft' && craftGrid[idx]) {
+            addToInv(craftGrid[idx], 1); craftGrid[idx] = null;
         }
-        renderInventoryUI(); renderHotbar();
+        renderInvUI(); updateUI();
     };
     return s;
 }
 
-function checkRecipe() {
-    const size = isCraftingTable ? 3 : 2;
-    const current = []; for(let i=0; i<size*size; i++) current.push(craftingGrid[i]);
-    let match = RECIPES.find(r => {
-        if(r.grid === 3 && !isCraftingTable) return false;
-        return JSON.stringify(r.in) === JSON.stringify(current.slice(0, r.in.length));
-    });
-    const resDiv = document.getElementById('crafting-result'); resDiv.innerHTML = '';
+function checkRecipes() {
+    const res = document.getElementById('crafting-result'); res.innerHTML = '';
+    const match = RECIPES.find(r => r.grid.every((id, i) => id === craftGrid[i]));
     if(match) {
-        resDiv.innerHTML = `<img src="${ITEMS[match.out.id].texture}"><span class="count">${match.out.count}</span>`;
-        resDiv.onclick = () => {
-            addToInventory(match.out.id, match.out.count);
-            for(let i=0; i<size*size; i++) craftingGrid[i] = null;
-            renderInventoryUI(); renderHotbar();
+        res.innerHTML = `<img src="${ITEMS[match.out].texture}"><span class="count">${match.count}</span>`;
+        res.onclick = () => {
+            addToInv(match.out, match.count);
+            for(let i=0; i<9; i++) craftGrid[i] = null;
+            renderInvUI(); updateUI();
         };
     }
-}
-
-function addToInventory(id, count) {
-    let slot = inventory.find(s => s.id === id) || inventory.find(s => !s.id);
-    if(slot) { slot.id = id; slot.count += count; }
-}
-
-function clearCraftingGrid() {
-    for(let i=0; i<9; i++) { if(craftingGrid[i]) { addToInventory(craftingGrid[i], 1); craftingGrid[i] = null; } }
-}
-
-/**
- * 7. PHYSICS & GAME LOOP
- */
-const raycaster = new THREE.Raycaster();
-const clock = new THREE.Clock();
-
-function checkCollision(pos) {
-    const px = Math.round(pos.x), py = Math.round(pos.y), pz = Math.round(pos.z);
-    for(let x=px-1; x<=px+1; x++) for(let y=py-2; y<=py+1; y++) for(let z=pz-1; z<=pz+1; z++) {
-        if(world[`${x},${y},${z}`]) {
-            const bx = x, by = y, bz = z;
-            if(pos.x+0.3 > bx-0.5 && pos.x-0.3 < bx+0.5 && pos.y+0.2 > by-0.5 && pos.y-1.6 < by+0.5 && pos.z+0.3 > bz-0.5 && pos.z-0.3 < bz+0.5) return true;
-        }
-    }
-    return false;
-}
-
-function playSound(type) {
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator(); const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(type === 'break' ? 100 : type === 'hit' ? 80 : 300, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-        osc.start(); osc.stop(ctx.currentTime + 0.1);
-    } catch(e) {}
 }
 
 function animate() {
     requestAnimationFrame(animate);
     const dt = Math.min(clock.getDelta(), 0.1);
     
-    if(!inventoryOpen) {
-        // Gravity
-        player.vel.y -= 25 * dt;
-
-        // Input Movement
+    if(!invOpen) {
+        // Basic Physics
+        player.vel.y -= 22 * dt;
         const yaw = camera.rotation.y;
-        const front = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
-        const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
-        const move = new THREE.Vector3();
-        
-        if(keys['KeyW']) move.add(front);
-        if(keys['KeyS']) move.sub(front);
-        if(keys['KeyA']) move.sub(right);
-        if(keys['KeyD']) move.add(right);
-        
-        if(move.length() > 0) move.normalize().multiplyScalar(6);
-        player.vel.x = move.x;
-        player.vel.z = move.z;
+        const dir = new THREE.Vector3();
+        if(keys['KeyW']) dir.z -= 1; if(keys['KeyS']) dir.z += 1;
+        if(keys['KeyA']) dir.x -= 1; if(keys['KeyD']) dir.x += 1;
+        dir.applyAxisAngle(new THREE.Vector3(0,1,0), yaw).normalize().multiplyScalar(5);
+        player.vel.x = dir.x; player.vel.z = dir.z;
+        if(keys['Space'] && player.onGround) player.vel.y = 8, player.onGround = false;
 
-        // Jump
-        if(keys['Space'] && player.onGround) {
-            player.vel.y = 8.5;
-            player.onGround = false;
-        }
-
-        // Apply X-Z Movement
-        player.pos.x += player.vel.x * dt;
-        if(checkCollision(player.pos)) player.pos.x -= player.vel.x * dt;
-        player.pos.z += player.vel.z * dt;
-        if(checkCollision(player.pos)) player.pos.z -= player.vel.z * dt;
-
-        // Apply Y Movement & Fall Damage
-        player.lastYVel = player.vel.y;
-        player.pos.y += player.vel.y * dt;
-        if(checkCollision(player.pos)) {
-            player.pos.y -= player.vel.y * dt;
-            // Fall damage: triggered if downward velocity was high enough on impact
-            if(player.vel.y < -12) {
-                const dmg = Math.floor((Math.abs(player.vel.y) - 12) / 2);
-                takeDamage(dmg);
+        const next = player.pos.clone().addScaledVector(player.vel, dt);
+        const isBlocked = (p) => {
+            for(let x=-0.3; x<=0.3; x+=0.6) for(let y=-1.5; y<=0.2; y+=0.8) for(let z=-0.3; z<=0.3; z+=0.6) {
+                if(getBlockAt(p.x+x, p.y+y, p.z+z) !== BLOCK.AIR) return true;
             }
-            player.vel.y = 0;
-            player.onGround = true;
-        } else {
-            player.onGround = false;
-        }
+            return false;
+        };
 
-        camera.position.set(player.pos.x, player.pos.y, player.pos.z);
+        if(!isBlocked(new THREE.Vector3(next.x, player.pos.y, player.pos.z))) player.pos.x = next.x;
+        if(!isBlocked(new THREE.Vector3(player.pos.x, player.pos.y, next.z))) player.pos.z = next.z;
+        const oldY = player.pos.y;
+        player.pos.y += player.vel.y * dt;
+        if(isBlocked(player.pos)) {
+            if(player.vel.y < -12) takeDamage(Math.floor((Math.abs(player.vel.y)-12)/2));
+            player.pos.y = oldY; player.vel.y = 0; player.onGround = true;
+        } else player.onGround = false;
+
+        camera.position.copy(player.pos);
         if(player.invincible > 0) player.invincible -= dt;
+
+        // Mining Progress Logic
+        if(mining.block) {
+            const blockKey = mining.block.name;
+            const blockId = world[blockKey];
+            
+            // Check if block still exists and is within range
+            if(blockId === undefined || player.pos.distanceTo(mining.block.position) > 6) {
+                stopMining();
+            } else {
+                const data = ITEMS[blockId];
+                let speed = (inventory[selectedSlot].id && ITEMS[inventory[selectedSlot].id].toolType === data.tool) ? ITEMS[inventory[selectedSlot].id].efficiency : 1;
+                mining.progress += (dt / data.hardness) * speed;
+                document.getElementById('mining-progress-bar').style.width = Math.min(100, mining.progress*100)+'%';
+                
+                if(mining.progress >= 1) {
+                    const dropId = data.drop || blockId;
+                    const pos = mining.block.position.clone();
+                    spawnDrop(pos.x, pos.y, pos.z, dropId);
+                    setBlock(pos.x, pos.y, pos.z, BLOCK.AIR);
+                    stopMining(); // THIS IS CRUCIAL: Reset the mining state
+                }
+            }
+        }
+
+        // Raycast update for selection box (every frame for responsiveness)
+        raycaster.setFromCamera(new THREE.Vector2(), camera);
+        const hits = raycaster.intersectObjects(interactables);
+        const validHit = hits.find(h => h.distance < 5);
+        if(validHit) {
+            selBox.visible = true; 
+            selBox.position.copy(validHit.object.position);
+        } else selBox.visible = false;
     }
 
-    // Mining Logic
-    if(miningBlock) {
-        const id = world[miningBlock.name];
-        const data = ITEMS[id];
-        let speed = 1.0;
-        const held = inventory[selectedSlot];
-        if(held && held.id && ITEMS[held.id].toolType === data.tool) speed = ITEMS[held.id].efficiency || 1.0;
-        
-        miningProgress += (dt / (data.hardness || 1)) * speed;
-        document.getElementById('mining-progress-bar').style.width = Math.min(100, (miningProgress * 100)) + '%';
-        
-        if(miningProgress >= 1.0) {
-            const dropId = data.drop || id;
-            spawnItemDrop(miningBlock.position.x, miningBlock.position.y, miningBlock.position.z, dropId);
-            setBlock(miningBlock.position.x, miningBlock.position.y, miningBlock.position.z, BLOCK.AIR);
-            miningBlock = null;
-            document.getElementById('mining-progress-container').style.display = 'none';
-            playSound('break');
+    // Drops Physics
+    for(let i=droppedItems.length-1; i>=0; i--) {
+        const d = droppedItems[i];
+        if(getBlockAt(d.mesh.position.x, d.mesh.position.y - 0.25, d.mesh.position.z) === BLOCK.AIR) {
+            d.vel.y -= 0.5 * dt;
+            d.mesh.position.add(d.vel);
+        } else { d.vel.y = 0; d.mesh.position.y = Math.round(d.mesh.position.y - 0.5) + 0.65; }
+        d.mesh.rotation.y += 2 * dt;
+        if(d.mesh.position.distanceTo(player.pos) < 1.8) {
+            addToInv(d.id, 1); 
+            scene.remove(d.mesh); 
+            d.mesh.geometry.dispose(); d.mesh.material.dispose();
+            droppedItems.splice(i, 1); 
+            updateUI();
         }
     }
-
-    // Drops Physics & Pickup
-    for(let i = droppedItems.length - 1; i >= 0; i--) {
-        const drop = droppedItems[i];
-        drop.vel.y -= 20 * dt;
-        drop.mesh.position.addScaledVector(drop.vel, dt);
-        drop.mesh.rotation.y += 2 * dt;
-        
-        // Ground collision for drops
-        const groundY = -4.5; // simple floor
-        if(drop.mesh.position.y < groundY) {
-            drop.mesh.position.y = groundY;
-            drop.vel.set(0,0,0);
-        }
-        
-        // Pickup check
-        if(drop.mesh.position.distanceTo(player.pos) < 1.5) {
-            addToInventory(drop.id, 1);
-            scene.remove(drop.mesh);
-            droppedItems.splice(i, 1);
-            renderHotbar();
-        }
-    }
-
-    mobs.forEach(m => m.update(dt));
     renderer.render(scene, camera);
 }
 
-const raycaster_sel = new THREE.Raycaster();
-const selectionBox = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.02, 1.02, 1.02)), new THREE.LineBasicMaterial({ color: 0x000000 }));
-scene.add(selectionBox);
+const selBox = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(1.02, 1.02, 1.02)), 
+    new THREE.LineBasicMaterial({color:0x000000, linewidth: 2})
+);
+selBox.raycast = () => {}; 
+scene.add(selBox);
 
-document.addEventListener('mousemove', (e) => {
-    if (document.pointerLockElement === document.body) {
+document.addEventListener('mousemove', e => {
+    if(document.pointerLockElement === document.body) {
         camera.rotation.y -= e.movementX * 0.002;
         camera.rotation.x -= e.movementY * 0.002;
         camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
     }
-    raycaster_sel.setFromCamera(new THREE.Vector2(0,0), camera);
-    const intersects = raycaster_sel.intersectObjects(interactables);
-    if(intersects.length > 0 && intersects[0].distance < 5) {
-        selectionBox.visible = true; selectionBox.position.copy(intersects[0].object.position);
-    } else selectionBox.visible = false;
 });
 
-window.addEventListener('resize', () => { 
-    camera.aspect = window.innerWidth/window.innerHeight; 
-    camera.updateProjectionMatrix(); 
-    renderer.setSize(window.innerWidth, window.innerHeight); 
-});
-
-renderHotbar(); 
-animate();
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const sun = new THREE.DirectionalLight(0xffffff, 0.5); sun.position.set(10, 20, 10); scene.add(sun);
+updateUI(); animate();
 </script>
 </body>
 </html>
